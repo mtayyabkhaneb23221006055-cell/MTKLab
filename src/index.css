@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: 'Syne', 'Plus Jakarta Sans', sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Bold Typography Theme Custom Utilities */
+.text-stroke-sm {
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.7);
+}
+
+.text-stroke-light {
+  -webkit-text-stroke: 1px rgba(15, 23, 42, 0.8);
+}
+
+.text-stroke-transparent {
+  color: transparent;
+  -webkit-text-stroke: 1.5px currentColor;
+}
+
+.tracking-ultra {
+  letter-spacing: 0.35em;
+}
+
+.tracking-mega {
+  letter-spacing: 0.25em;
+}
+
+/* Subtle scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+}
