@@ -17,14 +17,21 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Grant Execute Permission
-        run: chmod +x android/gradlew
+      - name: Unzip AI Studio Project
+        run: unzip mtkmicro-lab.zip
 
       - name: Build APK
-        run: cd android && ./gradlew assembleDebug
+        run: |
+          # Find the folder containing the gradlew file dynamically
+          GRADLE_DIR=$(dirname $(find . -name "gradlew" | head -n 1))
+          cd "$GRADLE_DIR"
+          
+          # Grant execute permission and build
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: "**/*.apk"
