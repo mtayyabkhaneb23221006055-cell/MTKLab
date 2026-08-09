@@ -1,11 +1,11 @@
-name: Sign Android APK
+name: Build Real Android App
 on:
   push:
     branches:
       - main
 
 jobs:
-  sign_apk:
+  build_apk:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
@@ -14,14 +14,37 @@ jobs:
       - name: Unzip AI Studio Project
         run: unzip -o mtkmicro-lab.zip
 
-      - name: Sign the APK
-        run: |
-          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-          APKSIGNER=$(find $ANDROID_HOME/build-tools -name "apksigner" | sort | tail -1)
-          $APKSIGNER sign --ks debug.keystore --ks-pass pass:android --key-pass pass:android MTKmicroLab.apk
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Upload Signed APK
+      - name: Install Web Dependencies and Build
+        run: |
+          npm install
+          npm run build
+
+      - name: Configure Capacitor
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          rm -rf android
+          npx cap init "MTKmicro Lab" com.mtkmicrolab.app --web-dir dist
+          npx cap add android
+
+      - name: Setup Java Environment
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build Android APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload Native APK
         uses: actions/upload-artifact@v4
         with:
-          name: MTKmicroLab-Signed-App
-          path: MTKmicroLab.apk
+          name: MTKmicroLab-Native-App
+          path: android/app/build/outputs/apk/debug/*.apk
