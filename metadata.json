@@ -1,0 +1,6 @@
+{
+  "name": "MTKmicro Lab",
+  "description": "Scientific laboratory companion for microbiology, molecular biology, biotechnology, and food safety intelligence with deterministic hazard evaluation, BAM/ISO regulatory methods, timers, calculators, and offline database.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
