@@ -18,15 +18,12 @@ jobs:
           java-version: 17
 
       - name: Unzip AI Studio Project
-        run: unzip mtkmicro-lab.zip
+        run: unzip -o mtkmicro-lab.zip
 
       - name: Build APK
         run: |
-          # Find the folder containing the gradlew file dynamically
           GRADLE_DIR=$(dirname $(find . -name "gradlew" | head -n 1))
           cd "$GRADLE_DIR"
-          
-          # Grant execute permission and build
           chmod +x gradlew
           ./gradlew assembleDebug
 
