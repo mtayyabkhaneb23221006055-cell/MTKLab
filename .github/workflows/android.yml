@@ -1,34 +1,21 @@
-name: Android APK Build
+name: Extract MTKmicro Lab APK
 on:
   push:
     branches:
       - main
 
 jobs:
-  build:
+  extract:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Setup Java Environment
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 17
-
       - name: Unzip AI Studio Project
         run: unzip -o mtkmicro-lab.zip
-
-      - name: Build APK
-        run: |
-          GRADLE_DIR=$(dirname $(find . -name "gradlew" | head -n 1))
-          cd "$GRADLE_DIR"
-          chmod +x gradlew
-          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
+          name: MTKmicroLab-Ready-App
           path: "**/*.apk"
