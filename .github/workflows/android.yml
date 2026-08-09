@@ -31,6 +31,16 @@ jobs:
           npx cap init "MTKmicro Lab" com.mtkmicrolab.app --web-dir dist
           npx cap add android
 
+      - name: Fix Kotlin Version Conflict
+        run: |
+          echo "
+          configurations.all {
+              resolutionStrategy.force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24'
+              resolutionStrategy.force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24'
+              resolutionStrategy.force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24'
+          }
+          " >> android/app/build.gradle
+
       - name: Setup Java Environment
         uses: actions/setup-java@v5
         with:
