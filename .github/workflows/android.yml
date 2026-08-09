@@ -1,11 +1,11 @@
-name: Extract MTKmicro Lab APK
+name: Sign Android APK
 on:
   push:
     branches:
       - main
 
 jobs:
-  extract:
+  sign_apk:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
@@ -14,8 +14,14 @@ jobs:
       - name: Unzip AI Studio Project
         run: unzip -o mtkmicro-lab.zip
 
-      - name: Upload APK
+      - name: Sign the APK
+        run: |
+          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          APKSIGNER=$(find $ANDROID_HOME/build-tools -name "apksigner" | sort | tail -1)
+          $APKSIGNER sign --ks debug.keystore --ks-pass pass:android --key-pass pass:android MTKmicroLab.apk
+
+      - name: Upload Signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: MTKmicroLab-Ready-App
-          path: "**/*.apk"
+          name: MTKmicroLab-Signed-App
+          path: MTKmicroLab.apk
