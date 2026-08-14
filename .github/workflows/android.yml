@@ -29,6 +29,19 @@ jobs:
           npm install @capacitor/core @capacitor/cli @capacitor/android
           rm -rf android
           npx cap init "MTKmicro Lab" com.mtkmicrolab.app --web-dir dist
+          
+          echo '{
+            "appId": "com.mtkmicrolab.app",
+            "appName": "MTKmicro Lab",
+            "webDir": "dist",
+            "bundledWebRuntime": false,
+            "server": {
+              "androidScheme": "http",
+              "cleartext": true,
+              "allowNavigation": ["*"]
+            }
+          }' > capacitor.config.json
+          
           npx cap add android
 
       - name: Fix Kotlin Version Conflict
@@ -40,6 +53,12 @@ jobs:
               resolutionStrategy.force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24'
           }
           " >> android/app/build.gradle
+
+      - name: Inject Android Network Permissions
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' $MANIFEST
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET" />' $MANIFEST
 
       - name: Setup Java Environment
         uses: actions/setup-java@v5
