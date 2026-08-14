@@ -19,10 +19,23 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Web Dependencies and Build
+      - name: Install Web Dependencies & Force Local Paths
         run: |
           npm install
-          npm run build
+          # Vite ko force karein ke wo CSS files ke local paths banaye
+          npx vite build --base ./
+
+      - name: Make Design Offline
+        run: |
+          # Agar Tailwind CSS ka online link mojood hai toh usay app mein download karein
+          if grep -q "cdn.tailwindcss.com" dist/index.html; then
+            curl -s https://cdn.tailwindcss.com -o dist/tailwind_offline.js
+            sed -i 's|https://cdn.tailwindcss.com|./tailwind_offline.js|g' dist/index.html
+            sed -i 's|https://cdn.tailwindcss.com/|./tailwind_offline.js|g' dist/index.html
+          fi
+          # Ghalat absolute paths ko relative mein theek karein
+          sed -i 's|href="/|href="./|g' dist/index.html
+          sed -i 's|src="/|src="./|g' dist/index.html
 
       - name: Configure Capacitor
         run: |
@@ -75,5 +88,5 @@ jobs:
       - name: Upload Native APK
         uses: actions/upload-artifact@v4
         with:
-          name: MTKmicroLab-Native-App
+          name: MTKmicroLab-Final-App
           path: android/app/build/outputs/apk/debug/*.apk
