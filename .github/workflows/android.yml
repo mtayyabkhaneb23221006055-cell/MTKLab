@@ -1,92 +1,43 @@
-name: Build Real Android App
+name: Build Android App
 on:
   push:
-    branches:
-      - main
-
+    branches: [ main ]
 jobs:
-  build_apk:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
-
-      - name: Unzip AI Studio Project
-        run: unzip -o mtkmicro-lab.zip
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - run: unzip -o mtkmicro-lab.zip
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Install Web Dependencies & Force Local Paths
-        run: |
-          npm install
-          # Vite ko force karein ke wo CSS files ke local paths banaye
-          npx vite build --base ./
-
-      - name: Make Design Offline
-        run: |
-          # Agar Tailwind CSS ka online link mojood hai toh usay app mein download karein
+      - run: npm install && npm run build
+      - run: |
+          sed -i 's|href="/|href="|g' dist/index.html
+          sed -i 's|src="/|src="|g' dist/index.html
+          sed -i 's|crossorigin||g' dist/index.html
           if grep -q "cdn.tailwindcss.com" dist/index.html; then
-            curl -s https://cdn.tailwindcss.com -o dist/tailwind_offline.js
-            sed -i 's|https://cdn.tailwindcss.com|./tailwind_offline.js|g' dist/index.html
-            sed -i 's|https://cdn.tailwindcss.com/|./tailwind_offline.js|g' dist/index.html
+            wget -qO dist/tailwind.js https://cdn.tailwindcss.com
+            sed -i 's|https://cdn.tailwindcss.com|tailwind.js|g' dist/index.html
+            sed -i 's|https://cdn.tailwindcss.com/|tailwind.js|g' dist/index.html
           fi
-          # Ghalat absolute paths ko relative mein theek karein
-          sed -i 's|href="/|href="./|g' dist/index.html
-          sed -i 's|src="/|src="./|g' dist/index.html
-
-      - name: Configure Capacitor
-        run: |
+      - run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
           rm -rf android
           npx cap init "MTKmicro Lab" com.mtkmicrolab.app --web-dir dist
-          
-          echo '{
-            "appId": "com.mtkmicrolab.app",
-            "appName": "MTKmicro Lab",
-            "webDir": "dist",
-            "bundledWebRuntime": false,
-            "server": {
-              "androidScheme": "http",
-              "cleartext": true,
-              "allowNavigation": ["*"]
-            }
-          }' > capacitor.config.json
-          
+          echo '{"appId":"com.mtkmicrolab.app","appName":"MTKmicro Lab","webDir":"dist","bundledWebRuntime":false,"server":{"androidScheme":"http","cleartext":true,"allowNavigation":["*"]}}' > capacitor.config.json
           npx cap add android
-
-      - name: Fix Kotlin Version Conflict
-        run: |
-          echo "
-          configurations.all {
-              resolutionStrategy.force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24'
-              resolutionStrategy.force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24'
-              resolutionStrategy.force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24'
-          }
-          " >> android/app/build.gradle
-
-      - name: Inject Android Network Permissions
-        run: |
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-          sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' $MANIFEST
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET" />' $MANIFEST
-
-      - name: Setup Java Environment
-        uses: actions/setup-java@v5
+      - run: |
+          echo "configurations.all { resolutionStrategy.force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24', 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24', 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24' }" >> android/app/build.gradle
+      - run: |
+          sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' android/app/src/main/AndroidManifest.xml
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />' android/app/src/main/AndroidManifest.xml
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
-
-      - name: Build Android APK
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
-
-      - name: Upload Native APK
-        uses: actions/upload-artifact@v4
+      - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
         with:
-          name: MTKmicroLab-Final-App
+          name: App-Ready
           path: android/app/build/outputs/apk/debug/*.apk
